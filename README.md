@@ -124,7 +124,7 @@ If the improved policy is the same as the old policy, the policy is considered s
 
 ## Python Program
 
-```
+```PY
 import gymnasium as gym
 import numpy as np
 
