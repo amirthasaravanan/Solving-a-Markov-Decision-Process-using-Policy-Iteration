@@ -284,8 +284,8 @@ optimal_policy, optimal_value_function = policy_iteration(
     theta=theta
 )
 
-print("Name:Danica Christa ")
-print("Register Number: 212223240022")
+print("Name: AMIRTHA VARSHINI M  ")
+print("Register Number: 212224230017")
 print_value_function(optimal_value_function)
 print_policy(optimal_policy)
 
