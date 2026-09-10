@@ -124,57 +124,204 @@ If the improved policy is the same as the old policy, the policy is considered s
 
 ## Python Program
 
-```python
+```
+import gymnasium as gym
+import numpy as np
+
+# -------------------------------------------------
+# Create FrozenLake Environment
+# -------------------------------------------------
+
+env = gym.make("FrozenLake-v1", map_name="4x4", is_slippery=True)
+env = env.unwrapped
+
+n_states = env.observation_space.n
+n_actions = env.action_space.n
+
+gamma = 0.92
+theta = 1e-4
+
+
+# -------------------------------------------------
+# Helper Function: One-Step Lookahead
+# -------------------------------------------------
+
+def one_step_lookahead(env, state, V, gamma):
+    """
+    Calculates the expected value of each action
+    from a given state.
+    """
+
+    action_values = np.zeros(n_actions)
+
+    for action in range(n_actions):
+        for probability, next_state, reward, terminated in env.P[state][action]:
+            action_values[action] += probability * (
+                reward + gamma * V[next_state] * (not terminated)
+            )
+
+    return action_values
+
 
 # -------------------------------------------------
 # Policy Evaluation
 # -------------------------------------------------
+# Code here
+def policy_evaluation(env, policy, gamma=0.92, theta=1e-4):
+    """
+    Evaluate a policy until convergence.
+    """
+    V = np.zeros(n_states)
 
+    while True:
+        delta = 0
+
+        for state in range(n_states):
+            v = 0
+
+            for action, action_prob in enumerate(policy[state]):
+                for probability, next_state, reward, terminated in env.P[state][action]:
+                    v += action_prob * probability * (
+                        reward + gamma * V[next_state] * (not terminated)
+                    )
+
+            delta = max(delta, abs(v - V[state]))
+            V[state] = v
+
+        if delta < theta:
+            break
+
+    return V
 
 
 # -------------------------------------------------
 # Policy Improvement
 # -------------------------------------------------
 
-#-------------------------------------------------
+# Code here
+def policy_improvement(env, V, gamma=0.92):
+    """
+    Improve the policy greedily using the current value function.
+    """
+    policy = np.zeros((n_states, n_actions))
+
+    for state in range(n_states):
+        action_values = one_step_lookahead(env, state, V, gamma)
+        best_action = np.argmax(action_values)
+        policy[state][best_action] = 1.0
+
+    return policy
+
+# -------------------------------------------------
 # Policy Iteration
 # -------------------------------------------------
 
+# Code here
+def policy_iteration(env, gamma=0.92, theta=1e-4):
+    """
+    Performs Policy Iteration.
+    """
+    # Initialize a random policy
+    policy = np.ones((n_states, n_actions)) / n_actions
+
+    iteration = 0
+
+    while True:
+        iteration += 1
+
+        # Policy Evaluation
+        V = policy_evaluation(env, policy, gamma, theta)
+
+        # Policy Improvement
+        new_policy = policy_improvement(env, V, gamma)
+
+        # Check policy stability
+        if np.array_equal(policy, new_policy):
+            print("\nPolicy converged!")
+            print(f"\nTotal policy iterations: {iteration}")
+            return policy, V
+
+        policy = new_policy
 
 
 
+
+# -------------------------------------------------
+# Display Functions
+# -------------------------------------------------
+
+def print_value_function(V):
+    print("\nOptimal State-Value Function:")
+    print(np.round(V.reshape(4, 4), 4))
+
+
+def print_policy(policy):
+    action_symbols = {
+        0: "←",
+        1: "↓",
+        2: "→",
+        3: "↑"
+    }
+
+    best_actions = np.argmax(policy, axis=1)
+    policy_grid = np.array(
+        [action_symbols[action] for action in best_actions]
+    ).reshape(4, 4)
+
+
+    print("\nOptimal Policy:")
+    print(policy_grid)
+
+
+
+# -------------------------------------------------
+# Run Policy Iteration
+# -------------------------------------------------
+
+optimal_policy, optimal_value_function = policy_iteration(
+    env,
+    gamma=gamma,
+    theta=theta
+)
+
+print("Name:Danica Christa ")
+print("Register Number: 212223240022")
+print_value_function(optimal_value_function)
+print_policy(optimal_policy)
+
+env.close()
 ```
 
 ## Output
 
-```text
+```TEXT
+Policy converged!
 
-Total policy iterations: 
+Total policy iterations: 2
+Name: AMIRTHA VARSHINI M
+Register Number: 212224230017
 
 Optimal State-Value Function:
-
+[[0.0978 0.0858 0.0961 0.0762]
+ [0.1236 0.     0.1317 0.    ]
+ [0.1818 0.2875 0.3333 0.    ]
+ [0.     0.4224 0.6676 0.    ]]
 
 Optimal Policy:
-
+[['←' '↑' '←' '↑']
+ ['←' '←' '←' '←']
+ ['↑' '↓' '←' '←']
+ ['←' '→' '↓' '←']]
 ```
-
 
 
 ---
 
 ## Result
-
-```text
-
-
-
-```
+The Policy Iteration algorithm was successfully implemented to obtain the optimal state-value function and optimal policy for the FrozenLake-v1 environment.
 ---
 
 ## Inference
-```text
-
-
-```
+The Policy Iteration algorithm successfully found the optimal policy and optimal state-value function for the FrozenLake environment. By changing the discount factor to γ = 0.92, the algorithm still converged successfully, but the state-value function changed slightly because future rewards were given a little less importance. The optimal policy remained the same for this environment.
 ---
 
